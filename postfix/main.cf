@@ -1,0 +1,96 @@
+# http://wiki.auto-hebergement.fr/serveurs/postfix
+
+#######################
+# Paramètres généraux #
+#######################
+
+# Nom de domaine de messagerie principal.
+mydomain = mildred.fr
+# Nom d'hôte. 
+myhostname = mail.mildred.fr
+# Nom de domaine utilisé pour les adresses incomplètes.
+myorigin = $mydomain
+
+# Activer l'écoute IPv6.
+inet_protocols = all
+
+# Les clients SMTP sûrs, qui auront plus de privilèges
+# (concrètement, le droit d'utiliser ce serveur comme relai).
+mynetworks = 127.0.0.0/8 [::1]/128
+
+################
+# Serveur SMTP #
+################
+
+# Les noms de domaine pour lesquels on accepte le courrier.
+mydestination = mildred.fr, localhost, localhost.localdomain
+# Si votre FAI ne vous permet pas de poster le courrier directement,
+# utiliser son serveur SMTP comme relai en décommentant cette ligne.
+#relayhost = smtp.fai.com
+
+# Refuser les clients qui ne parlent pas bien RFC821.
+smtpd_helo_required = yes
+strict_rfc821_envelopes = yes
+# Rejeter dès que possible.
+#smtpd_delay_reject = no
+
+# Règles pour accepter ou  refuser une connexion :
+# - on attend une seconde (pour piéger les zombies)l
+# - on interdit la parallélisation là où il n'est pas sensé y en avoir.
+smtpd_client_restrictions =
+    permit_mynetworks, permit_sasl_authenticated,
+    sleep 1, reject_unauth_pipelining
+# Règles pour accepter ou refuser un message, dès lors qu'on connaît le nom
+# de l'hôte de l'expéditeur (par sa commande HELO ou EHLO) :
+# - on refuse les noms d'hôte invalides.
+smtpd_helo_restrictions = reject_invalid_helo_hostname
+# Règles pour accepter ou refuser un message, dès lors qu'on connaît l'adresse
+# de l'expéditeur :
+# - s'il vient d'un expéditeur forgé chez nous, on le rejette�
+# - si le domaine de l'expéditeur n'a pas d'IP ou de MX, on le refuse :
+# - s'il vient d'un client sûr, on l'accepte�
+# - s'il vient d'un client autentifié, on l'accepte�
+# - si l'adresse de l'expéditeur n'est pas sous forme canonique, on le refuse.
+smtpd_sender_restrictions =
+    reject_unlisted_sender, reject_unknown_sender_domain,
+    permit_mynetworks, permit_sasl_authenticated,
+    reject_non_fqdn_sender
+# Règles pour accepter ou refuser un message, dès lors qu'on connaît le
+# destinataire (par la commande RCPT TO) :
+# - s'il est destiné à un expéditeur forgé chez nous, on le rejette�
+# - s'il est destiné à un domaine forgé, on le rejette�
+# - s'il vient d'un hôte sûr, on l'accepte�
+# - s'il vient d'un client autentifié, on l'accepte�
+# - si l'adresse de destination n'est pas sous forme canonique, on le refuse�
+# - finalement, s'il n'est pas destiné à un domaine que l'on gère ou pour
+#   lequel on relaie, on le refuse.
+smtpd_recipient_restrictions =
+    reject_unlisted_recipient, reject_unknown_recipient_domain,
+    permit_mynetworks, permit_sasl_authenticated,
+    reject_non_fqdn_recipient,
+    reject_unauth_destination
+
+# Pour activer l'autentification sur le serveur SMTP, après avoir
+# mis en place le service de Dovecot, décommentez ces lignes.
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_authenticated_header = yes
+
+# N'autoriser les autentification que sur des connexions chiffrées
+smtpd_tls_auth_only = yes
+
+
+#######################
+# Distribution locale #
+#######################
+
+# Commande pour distribuer le courrier.
+mailbox_command = procmail -a "$EXTENSION"
+# Taille limite des BàL
+mailbox_size_limit = 51200000
+# Caractère séparant le nom de destinataire d'un paramètre additionnel
+# (adresses « plussées », du type <untel+nawak@example.com>  <untel@example.com>)
+recipient_delimiter = -
+
+
