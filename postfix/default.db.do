@@ -1,2 +1,2 @@
-redo-ifchange "$1"
-postmap "$1"
+redo-ifchange "$2"
+postmap "$2"

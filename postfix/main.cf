@@ -1,8 +1,8 @@
 # http://wiki.auto-hebergement.fr/serveurs/postfix
 
-#######################
-# Paramètres généraux #
-#######################
+#####################
+# Global Parameters #
+#####################
 
 # Nom de domaine de messagerie principal.
 mydomain = mildred.fr
@@ -18,15 +18,23 @@ inet_protocols = all
 # (concrètement, le droit d'utiliser ce serveur comme relai).
 mynetworks = 127.0.0.0/8 [::1]/128
 
-################
-# Serveur SMTP #
-################
+# Les noms de domaine pour lesquels on accepte le courrier local.
+mydestination = $myhostname, localhost, localhost.localdomain
 
-# Les noms de domaine pour lesquels on accepte le courrier.
-mydestination = mildred.fr, localhost, localhost.localdomain
+# Les domaines virtuels
+virtual_mailbox_domains = mildred.fr
+
 # Si votre FAI ne vous permet pas de poster le courrier directement,
 # utiliser son serveur SMTP comme relai en décommentant cette ligne.
 #relayhost = smtp.fai.com
+
+recipient_delimiter = -
+
+smtpd_tls_security_level = may
+
+###################
+# Rejection Rules #
+###################
 
 # Refuser les clients qui ne parlent pas bien RFC821.
 smtpd_helo_required = yes
@@ -46,26 +54,28 @@ smtpd_client_restrictions =
 smtpd_helo_restrictions = reject_invalid_helo_hostname
 # Règles pour accepter ou refuser un message, dès lors qu'on connaît l'adresse
 # de l'expéditeur :
-# - s'il vient d'un expéditeur forgé chez nous, on le rejette�
+# - OFF: s'il vient d'un expéditeur forgé chez nous, on le rejette� (reject_unlisted_sender)
 # - si le domaine de l'expéditeur n'a pas d'IP ou de MX, on le refuse :
 # - s'il vient d'un client sûr, on l'accepte�
 # - s'il vient d'un client autentifié, on l'accepte�
 # - si l'adresse de l'expéditeur n'est pas sous forme canonique, on le refuse.
 smtpd_sender_restrictions =
-    reject_unlisted_sender, reject_unknown_sender_domain,
-    permit_mynetworks, permit_sasl_authenticated,
+    reject_unknown_sender_domain,
+    permit_mynetworks,
+    permit_sasl_authenticated,
     reject_non_fqdn_sender
 # Règles pour accepter ou refuser un message, dès lors qu'on connaît le
 # destinataire (par la commande RCPT TO) :
-# - s'il est destiné à un expéditeur forgé chez nous, on le rejette�
-# - s'il est destiné à un domaine forgé, on le rejette�
+# - OFF: s'il est destiné à un expéditeur forgé chez nous, on le retteje (reject_unlisted_recipient)
+# - OFF: s'il est pas listé, on rejette (reject_unverified_recipient)
+# - s'il est destiné à un domaine forgé, on le rejette� 
 # - s'il vient d'un hôte sûr, on l'accepte�
 # - s'il vient d'un client autentifié, on l'accepte�
 # - si l'adresse de destination n'est pas sous forme canonique, on le refuse�
 # - finalement, s'il n'est pas destiné à un domaine que l'on gère ou pour
 #   lequel on relaie, on le refuse.
 smtpd_recipient_restrictions =
-    reject_unlisted_recipient, reject_unknown_recipient_domain,
+    reject_unknown_recipient_domain,
     permit_mynetworks, permit_sasl_authenticated,
     reject_non_fqdn_recipient,
     reject_unauth_destination
@@ -81,16 +91,40 @@ smtpd_sasl_authenticated_header = yes
 smtpd_tls_auth_only = yes
 
 
-#######################
-# Distribution locale #
-#######################
+###################
+# Virtual Domains #
+###################
 
-# Commande pour distribuer le courrier.
-mailbox_command = procmail -a "$EXTENSION"
-# Taille limite des BàL
-mailbox_size_limit = 51200000
-# Caractère séparant le nom de destinataire d'un paramètre additionnel
-# (adresses « plussées », du type <untel+nawak@example.com>  <untel@example.com>)
-recipient_delimiter = -
+# http://www.postfix.org/VIRTUAL_README.html#in_virtual_other
+# http://wiki2.dovecot.org/LDA/Postfix
 
+# See the transport in master.cf
+# virtual_transport = dovecot
+# dovecot_destination_recipient_limit = 1
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+# File containing database of virtual mailboxes
+# virtual_mailbox_maps = hash:/etc/postfix/vmailbox
+
+# File containing database of virtual aliases
+virtual_alias_maps = hash:/etc/postfix/valias
+
+
+############################
+# Additional configuration #
+############################
+# http://wiki2.dovecot.org/HowTo/VirtualUserFlatFilesPostfix
+
+smtpd_banner = $myhostname ESMTP
+biff = no
+append_dot_mydomain = no
+
+strict_rfc821_envelopes = yes
+disable_vrfy_command = yes
+
+alias_maps = hash:/etc/aliases
+
+# SSL certificates
+smtpd_tls_cert_file = /etc/ssl/certs/dovecot.pem
+smtpd_tls_key_file = /etc/ssl/private/dovecot.pem
 

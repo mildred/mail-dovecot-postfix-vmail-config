@@ -1,1 +1,1 @@
-redo-ifchange vmailbox.db valias.db
+redo-ifchange valias.db
