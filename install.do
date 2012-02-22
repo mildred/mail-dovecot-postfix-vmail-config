@@ -1,16 +1,17 @@
+#!/bin/sh
 
 exec >&2
 
 makelink(){
   local linkfile="$1"
   local target="$2"
-  local date="$(date)"
+  local date="$(date | tr ' ' _)"
 
   if [ -L "$linkfile" ]; then
     echo "Check $linkfile points to $target"
-  elif [ -e /etc/dovecot ]; then
-    mv "$linkfile" "$linkfile.${date// /_}"
-    echo "Backup $linkfile to $linkfile.${date// /_}"
+  elif [ -e "$linkfile" ]; then
+    echo "Backup $linkfile to $linkfile.${date}"
+    mv "$linkfile" "$linkfile.${date}"
     ln -s "$target" "$linkfile"
   else
     ln -s "$target" "$linkfile"

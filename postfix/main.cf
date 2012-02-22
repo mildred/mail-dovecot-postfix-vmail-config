@@ -32,6 +32,8 @@ recipient_delimiter = -
 
 smtpd_tls_security_level = may
 
+allow_min_user = yes
+
 ###################
 # Rejection Rules #
 ###################
