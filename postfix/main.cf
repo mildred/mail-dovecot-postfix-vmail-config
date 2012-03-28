@@ -4,35 +4,35 @@
 # Global Parameters #
 #####################
 
-# Nom de domaine de messagerie principal.
+# mydomain:   master domain name managed by this server
+# myhostname: domain name for the server
+# myorigin:   domain name used for incomplete addresses
+
 mydomain = mildred.fr
-# Nom d'hôte. 
 myhostname = mail.mildred.fr
-# Nom de domaine utilisé pour les adresses incomplètes.
 myorigin = $mydomain
 
-# Activer l'écoute IPv6.
-inet_protocols = all
 
-# Les clients SMTP sûrs, qui auront plus de privilèges
-# (concrètement, le droit d'utiliser ce serveur comme relai).
-mynetworks = 127.0.0.0/8 [::1]/128
+# mydestination:           hosts for wich we accept local delivery
+# virtual_mailbox_domains: hosts for wich we manage delivery using virtual users
 
-# Les noms de domaine pour lesquels on accepte le courrier local.
-mydestination = $myhostname, localhost, localhost.localdomain
-
-# Les domaines virtuels
+mydestination = $myhostname, list.mildred.fr, localhost, localhost.localdomain
 virtual_mailbox_domains = mildred.fr
 
-# Si votre FAI ne vous permet pas de poster le courrier directement,
-# utiliser son serveur SMTP comme relai en décommentant cette ligne.
+
+# mynetworks:              privileged clients that can use us as a relay
+# inet_protocols:      all to activate IPv6
+# recipient_delimiter: delimiter for extra part of an address
+# relayhost:           SMTP relay if we can't act as one
+
+mynetworks = 127.0.0.0/8 [::1]/128
+inet_protocols = all
+recipient_delimiter = -
 #relayhost = smtp.fai.com
 
-recipient_delimiter = -
-
 smtpd_tls_security_level = may
-
 allow_min_user = yes
+
 
 ###################
 # Rejection Rules #
@@ -41,11 +41,11 @@ allow_min_user = yes
 # Refuser les clients qui ne parlent pas bien RFC821.
 smtpd_helo_required = yes
 strict_rfc821_envelopes = yes
-# Rejeter dès que possible.
+# Rejeter des que possible.
 #smtpd_delay_reject = no
 
-# Règles pour accepter ou  refuser une connexion :
-# - on attend une seconde (pour piéger les zombies)l
+# Regles pour accepter ou  refuser une connexion :
+# - on attend une seconde (pour pieger les zombies)l
 # - on interdit la parallélisation là où il n'est pas sensé y en avoir.
 smtpd_client_restrictions =
     permit_mynetworks, permit_sasl_authenticated,
