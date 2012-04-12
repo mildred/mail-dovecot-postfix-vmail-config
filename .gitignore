@@ -1,5 +1,7 @@
 *~
 *.did
+*-dist
+*.tmp
 .redo/
 .do_built
 .do_built.dir/
